@@ -96,6 +96,11 @@ function App(){
    }
    if(!confirm(`Download a backup and migrate ${localProducts.length} products, categories and brands to your private Firestore cloud catalogue? The backup file will be downloaded before upload.`))return;
    downloadFile('dailyaura-pre-cloud-migration-backup.json',JSON.stringify({version:1,exportedAt:new Date().toISOString(),products:localProducts,categories:localCategories,brands:localBrands},null,2),'application/json');
+   if(!confirm('The backup download has been started. Please verify that dailyaura-pre-cloud-migration-backup.json is saved and contains your catalogue. Only continue after confirming the backup is safely saved. Continue with cloud migration?')){
+     setNotice('Migration cancelled — verify the downloaded backup, then try again.');
+     setTimeout(()=>setNotice(''),4500);
+     return;
+   }
    setCloudMigrating(true);setCloudSyncStatus('Migrating local catalogue…');setCloudSyncError('');
    try{
      for(let i=0;i<localProducts.length;i+=400){
