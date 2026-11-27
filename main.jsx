@@ -109,7 +109,7 @@ function App(){
      await setDoc(doc(db,'managerData','catalog','config','categories'),{items:categories,updatedAt:new Date().toISOString()});
      await setDoc(doc(db,'managerData','catalog','config','brands'),{items:brands,updatedAt:new Date().toISOString()});
      // Publish only approved fields; never expose cost, margin, or other manager-only data.
-     const publicProducts=products.filter(p=>p.status==='Published'&&!attentionReason(p).length).map(p=>({id:p.id,name:p.name,brand:p.brand||'',category:p.category||'',subcategory:p.subcategory||'',mrp:Number(p.mrp||0),sale:Number(p.sale||0),size:p.size||'',image:p.image||'',variants:(p.variants||[]).map(v=>({label:v.label||'',mrp:Number(v.mrp||0),sale:Number(v.sale||0),image:v.image||''})),clearingOut:!!p.clearingOut,status:'Published'})));
+     const publicProducts=products.filter(p=>p.status==='Published'&&!attentionReason(p).length).map(p=>({id:p.id,name:p.name,brand:p.brand||'',category:p.category||'',subcategory:p.subcategory||'',mrp:Number(p.mrp||0),sale:Number(p.sale||0),size:p.size||'',image:p.image||'',variants:(p.variants||[]).map(v=>({label:v.label||'',mrp:Number(v.mrp||0),sale:Number(v.sale||0),image:v.image||''})),clearingOut:!!p.clearingOut,status:'Published'}));
      const publicSnap=await getDocs(collection(db,'publicCatalog','items','products'));
      const publicIds=new Set(publicProducts.map(p=>String(p.id)));
      for(let i=0;i<publicProducts.length;i+=400){const batch=writeBatch(db);publicProducts.slice(i,i+400).forEach(p=>batch.set(doc(db,'publicCatalog','items','products',String(p.id)),p));await batch.commit();}
