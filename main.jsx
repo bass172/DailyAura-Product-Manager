@@ -84,7 +84,17 @@ function App(){
  const migrateLocalToCloud=async()=>{
    if(!authUser||cloudMigrating)return;
    const localProducts=products,localCategories=categories,localBrands=brands;
-   if(!confirm('Back up your current browser catalogue and upload it to Firestore? This will copy products, categories and brands to your private cloud catalogue.'))return;
+   if(!Array.isArray(localProducts)||localProducts.length===0){
+     setNotice('Migration blocked: no saved product catalogue was found. Import your real products first.');
+     setTimeout(()=>setNotice(''),4500);return;
+   }
+   // Prevent the built-in demo catalogue (or any of its sample rows) from being migrated.
+   const demoRows=demoProducts.filter(sample=>localProducts.some(p=>String(p.id)===String(sample.id)&&p.name===sample.name));
+   if(demoRows.length>0){
+     setNotice('Migration blocked: sample/demo products detected. Replace or remove demo rows, then try again.');
+     setTimeout(()=>setNotice(''),5000);return;
+   }
+   if(!confirm(`Download a backup and migrate ${localProducts.length} products, categories and brands to your private Firestore cloud catalogue? The backup file will be downloaded before upload.`))return;
    downloadFile('dailyaura-pre-cloud-migration-backup.json',JSON.stringify({version:1,exportedAt:new Date().toISOString(),products:localProducts,categories:localCategories,brands:localBrands},null,2),'application/json');
    setCloudMigrating(true);setCloudSyncStatus('Migrating local catalogue…');setCloudSyncError('');
    try{
