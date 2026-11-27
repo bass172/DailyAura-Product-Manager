@@ -1,0 +1,26 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Replace the placeholder with the exact admin email used in Firebase Authentication.
+    function isDailyAuraAdmin() {
+      return request.auth != null
+        && request.auth.token.email == "REPLACE_WITH_ADMIN_EMAIL";
+    }
+
+    // Manager data is private. No public read/write access.
+    match /managerData/{document=**} {
+      allow read, write: if isDailyAuraAdmin();
+    }
+
+    // Public website reads only explicitly published catalogue projections.
+    match /publicCatalog/{document=**} {
+      allow read: if true;
+      allow write: if isDailyAuraAdmin();
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
