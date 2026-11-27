@@ -38,3 +38,7 @@ Connect the app to an authenticated backend. Public product fields can then be s
 - Updated privacy wording to clarify that manager exports contain private cost fields and must not be published to the public storefront.
 
 Note: this phase remains a browser-local prototype; online sync and cloud persistence still require backend work.
+
+
+## GitHub Pages deployment
+The project is deployed using the GitHub Actions workflow in `.github/workflows/deploy.yml`. In repository Settings → Pages, the publishing source must be set to **GitHub Actions**.
