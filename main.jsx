@@ -59,7 +59,8 @@ function App(){
  const addVariant=()=>setForm(f=>({...f,variants:[...(f.variants||[]),{label:'',mrp:'',sale:'',cost:''}]}));
  const updateVariant=(i,key,value)=>setForm(f=>({...f,variants:f.variants.map((v,j)=>j===i?{...v,[key]:value}:v)}));
  const saveCategory=()=>{if(!newCategory.trim())return;setCategories(c=>[...c,{name:newCategory.trim(),icon:'📦',subs:[]}]);setNewCategory('')};
- const addSub=()=>{if(!newSub.trim()||!catEdit)return;setCategories(c=>c.map(x=>x.name===catEdit?{...x,subs:x.subs.includes(newSub.trim())?x.subs:[...x.subs,newSub.trim()]}:x));setNewSub('')};\n const deleteSub=(category,sub)=>{if(confirm(`Delete subcategory ${sub}?`))setCategories(c=>c.map(x=>x.name===category?{...x,subs:x.subs.filter(s=>s!==sub)}:x))};
+ const addSub=()=>{if(!newSub.trim()||!catEdit)return;setCategories(c=>c.map(x=>x.name===catEdit?{...x,subs:x.subs.includes(newSub.trim())?x.subs:[...x.subs,newSub.trim()]}:x));setNewSub('')};
+ const deleteSub=(category,sub)=>{if(confirm(`Delete subcategory ${sub}?`))setCategories(c=>c.map(x=>x.name===category?{...x,subs:x.subs.filter(s=>s!==sub)}:x))};
  const deleteCategory=name=>{if(confirm(`Delete category ${name}?`))setCategories(c=>c.filter(x=>x.name!==name))};
  const setStatus=(p,status)=>setProducts(old=>old.map(x=>x.id===p.id?{...x,status}:x));
  const pageTitle=page==='categories'?'Categories':page==='dashboard'?'Dashboard':page==='products'?'Products':page==='settings'?'Settings':page;
