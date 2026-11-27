@@ -89,7 +89,7 @@ function App(){
      setTimeout(()=>setNotice(''),4500);return;
    }
    // Prevent the built-in demo catalogue (or any of its sample rows) from being migrated.
-   const demoRows=demoProducts.filter(sample=>localProducts.some(p=>String(p.id)===String(sample.id)&&p.name===sample.name));
+   const demoIds=new Set(demoProducts.map(sample=>String(sample.id)); const demoRows=demoProducts.filter(sample=>localProducts.some(p=>String(p.id)===String(sample.id)));
    if(demoRows.length>0){
      setNotice('Migration blocked: sample/demo products detected. Replace or remove demo rows, then try again.');
      setTimeout(()=>setNotice(''),5000);return;
