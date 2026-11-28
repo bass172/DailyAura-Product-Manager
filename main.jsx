@@ -194,7 +194,23 @@ function App(){
  </div>
 }
 function subEmoji(s){const m={'Face Wash':'🫧','Cream':'🧴','Serum':'✨','Sunscreen':'☀️','Toner':'💧','Face Mask':'🎭','Scrub':'🧖','Shampoo':'🧴','Conditioner':'🫧','Hair Oil':'🌿','Hair Serum':'✨','Lipstick':'💄','Foundation':'💅','Soap':'🧼','Perfume':'🌸'};return m[s]||'📦'}
-function ProductGridCard({product,onClick}){return <button type="button" className="product-icon-card" onClick={onClick}><div className="product-icon-image">{product.image?<img src={product.image} alt=""/>:<Package size={28}/>}</div><strong title={product.name}>{product.name}</strong><small>{product.brand||product.subcategory||''}</small><div className="product-icon-prices"><b>{fmt(product.sale)}</b><span>{fmt(product.mrp)}</span></div></button>}
+function ProductGridCard({product,onClick}){
+ const baseLabel=String(product.size||product.regularSize||product.defaultSize||'').trim();
+ const baseVariant={label:baseLabel||'Regular',mrp:Number(product.mrp||0),sale:Number(product.sale||0),isBase:true};
+ const extraVariants=(Array.isArray(product.variants)?product.variants:[]).filter(v=>v&&String(v.label||'').trim()).map(v=>({...v,label:String(v.label).trim(),mrp:Number(v.mrp||0),sale:Number(v.sale||0)}));
+ const baseKey=baseLabel.toLowerCase().replace(/\\s+/g,' ');
+ const variants=[baseVariant,...extraVariants.filter(v=>v.label.toLowerCase().replace(/\\s+/g,' ')!==baseKey)];
+ const [variantIndex,setVariantIndex]=useState(0);
+ const selectedVariant=variants[Math.min(variantIndex,variants.length-1)]||baseVariant;
+ return <div className="product-icon-card" role="button" tabIndex={0} onClick={onClick} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onClick()}}}>
+  <div className="product-icon-image">{product.image?<img src={product.image} alt=""/>:<Package size={28}/>}</div>
+  <strong title={product.name}>{product.name}</strong><small>{product.brand||product.subcategory||''}</small>
+  <div className="product-icon-prices"><b>{fmt(selectedVariant.sale)}</b><span>{fmt(selectedVariant.mrp)}</span></div>
+  <div className="product-grid-variants" onClick={e=>e.stopPropagation()} aria-label="Select product size or variant">
+   {variants.map((v,i)=><button key={i} type="button" className={'variant-chip '+(i===variantIndex?'selected':'')} onClick={()=>setVariantIndex(i)} title={'MRP '+fmt(v.mrp)+' · Selling '+fmt(v.sale)}>{v.isBase?(v.label||'Base'):v.label}</button>)}
+  </div>
+ </div>
+}
 function ProductRow({product,onClick}){
  const baseLabel=String(product.size||product.regularSize||product.defaultSize||'').trim();
  const baseVariant={label:baseLabel||'Regular',mrp:Number(product.mrp||0),sale:Number(product.sale||0),isBase:true};
