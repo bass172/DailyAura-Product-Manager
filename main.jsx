@@ -152,6 +152,7 @@ function App(){
          }
          await setDoc(doc(db,'managerData','catalog','config','categories'),{items:syncCategories,updatedAt:new Date().toISOString()});
          await setDoc(doc(db,'managerData','catalog','config','brands'),{items:syncBrands,updatedAt:new Date().toISOString()});
+         await setDoc(doc(db,'publicCatalog','items','config','categories'),{items:syncCategories,updatedAt:new Date().toISOString()});
          const publicProducts=syncProducts.filter(p=>automaticStatus(p)==='Published').map(p=>({id:p.id,name:p.name,brand:p.brand||'',category:p.category||'',subcategory:p.subcategory||'',mrp:Number(p.mrp||0),sale:Number(p.sale||0),size:p.size||'',image:p.image||'',variants:(p.variants||[]).map(v=>({label:v.label||'',mrp:Number(v.mrp||0),sale:Number(v.sale||0),image:v.image||''})),clearingOut:!!p.clearingOut,outOfStock:!!p.outOfStock,status:'Published'}));
          const publicSnap=await getDocs(collection(db,'publicCatalog','items','products'));
          const publicIds=new Set(publicProducts.map(p=>String(p.id)));
