@@ -45,7 +45,8 @@ function csvEscape(value){const v=String(value??'');return /[",\n\r]/.test(v)?'"
 function downloadFile(filename,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 
 const attentionReason = p => [!p.name?'Missing name':null,!p.category?'Missing category':null,!p.subcategory?'Missing subcategory':null,!(Number(p.mrp)>0)?'Missing MRP':null,!(Number(p.sale)>0)?'Missing selling price':null,!p.image?'Missing image':null].filter(Boolean);
-const publishIssues = p => attentionReason(p);\nconst automaticStatus = p => publishIssues(p).length ? 'Unpublished' : 'Published';
+const publishIssues = p => attentionReason(p);
+const automaticStatus = p => publishIssues(p).length ? 'Unpublished' : 'Published';
 function App(){
  const [cloudReloadKey,setCloudReloadKey]=useState(0); const [cloudReady,setCloudReady]=useState(false); const [cloudLoading,setCloudLoading]=useState(false); const [cloudMigrationRequired,setCloudMigrationRequired]=useState(false); const [cloudSyncStatus,setCloudSyncStatus]=useState('Checking cloud…'); const [cloudSyncError,setCloudSyncError]=useState(''); const [cloudMigrating,setCloudMigrating]=useState(false);
  const [authUser,setAuthUser]=useState(null); const [authLoading,setAuthLoading]=useState(true); const [loginEmail,setLoginEmail]=useState(''); const [loginPassword,setLoginPassword]=useState(''); const [loginError,setLoginError]=useState(''); const [loginBusy,setLoginBusy]=useState(false);
