@@ -123,28 +123,61 @@ function App(){
    }catch(err){setCloudSyncError(err?.message||'Migration failed');setCloudSyncStatus('Migration failed');setNotice('Migration failed — local catalogue is still available');}
    finally{setCloudMigrating(false);setTimeout(()=>setNotice(''),4000);}
  };
- // Private manager data cloud sync; serialized and based on latest state to prevent stale overlapping writes/deletes.
- const latestCloudDataRef=useRef({products,categories,brands}); const cloudSyncQueueRef=useRef(Promise.resolve());
+ // Private manager data cloud sync; serialized and based on latest state to avoid stale writes/deletes.
+ const latestCloudDataRef=useRef({products,categories,brands});
+ const cloudSyncQueueRef=useRef(Promise.resolve());
  useEffect(()=>{latestCloudDataRef.current={products,categories,brands}},[products,categories,brands]);
- useEffect(()=>{if(!authUser||!cloudReady||cloudMigrationRequired)return;let cancelled=false;
-   const enqueueSync=()=>{cloudSyncQueueRef.current=cloudSyncQueueRef.current.catch(()=>{}).then(async()=>{if(cancelled)return;const snapshot=latestCloudDataRef.current;const syncProducts=snapshot.products,syncCategories=snapshot.categories,syncBrands=snapshot.brands;try{
-   (async()=>{try{
-     const privateSnap=await getDocs(collection(db,'managerData','catalog','products'));const activeProductIds=new Set(products.map(p=>String(p.id)));for(let i=0;i<syncProducts.length;i+=400{const batch=writeBatch(db);syncProducts.slice(i,i+400).forEach(p=>batch.set(doc(db,'managerData','catalog','products',String(p.id)),p));await batch.commit();}const privateStale=privateSnap.docs.filter(d=>!activeProductIds.has(d.id));for(let i=0;i<privateStale.length;i+=400){const batch=writeBatch(db);privateStale.slice(i,i+400).forEach(d=>batch.delete(d.ref));await batch.commit();}
-     await setDoc(doc(db,'managerData','catalog','config','categories'),{items:syncCategories,updatedAt:new Date().toISOString()});
-     await setDoc(doc(db,'managerData','catalog','config','brands'),{items:syncBrands,updatedAt:new Date().toISOString()});
-     // Publish only approved fields; never expose cost, margin, or other manager-only data.
-     const publicProducts=syncProducts.filter(p=>automaticStatus(p)==='Published').map(p=>({id:p.id,name:p.name,brand:p.brand||'',category:p.category||'',subcategory:p.subcategory||'',mrp:Number(p.mrp||0),sale:Number(p.sale||0),size:p.size||'',image:p.image||'',variants:(p.variants||[]).map(v=>({label:v.label||'',mrp:Number(v.mrp||0),sale:Number(v.sale||0),image:v.image||''})),clearingOut:!!p.clearingOut,outOfStock:!!p.outOfStock,status:'Published'}));
-     const publicSnap=await getDocs(collection(db,'publicCatalog','items','products'));
-     const publicIds=new Set(publicProducts.map(p=>String(p.id)));
-     for(let i=0;i<publicProducts.length;i+=400){const batch=writeBatch(db);publicProducts.slice(i,i+400).forEach(p=>batch.set(doc(db,'publicCatalog','items','products',String(p.id)),p));await batch.commit();}
-     const stale=publicSnap.docs.filter(d=>!publicIds.has(d.id));for(let i=0;i<stale.length;i+=400){const batch=writeBatch(db);stale.slice(i,i+400).forEach(d=>batch.delete(d.ref));await batch.commit();}
-     if(!cancelled){const eligibleCount=publicProducts.length;setCloudSyncStatus(eligibleCount===0?'Synced · 0 public products — check Published status and required fields':'Synced · '+eligibleCount+' public products · '+new Date().toLocaleTimeString());setCloudSyncError('');}
-   }catch(err){if(!cancelled){setCloudSyncStatus('Sync error');setCloudSyncError(err?.message||'Cloud sync failed');}}})();
-   });};
+ useEffect(()=>{
+   if(!authUser||!cloudReady||cloudMigrationRequired)return;
+   let cancelled=false;
+   const enqueueSync=()=>{
+     cloudSyncQueueRef.current=cloudSyncQueueRef.current.catch(()=>{}).then(async()=>{
+       if(cancelled)return;
+       const snapshot=latestCloudDataRef.current;
+       const syncProducts=snapshot.products,syncCategories=snapshot.categories,syncBrands=snapshot.brands;
+       try{
+         const privateSnap=await getDocs(collection(db,'managerData','catalog','products'));
+         const activeProductIds=new Set(syncProducts.map(p=>String(p.id)));
+         for(let i=0;i<syncProducts.length;i+=400){
+           const batch=writeBatch(db);
+           syncProducts.slice(i,i+400).forEach(p=>batch.set(doc(db,'managerData','catalog','products',String(p.id)),p));
+           await batch.commit();
+         }
+         const privateStale=privateSnap.docs.filter(d=>!activeProductIds.has(d.id));
+         for(let i=0;i<privateStale.length;i+=400){
+           const batch=writeBatch(db);
+           privateStale.slice(i,i+400).forEach(d=>batch.delete(d.ref));
+           await batch.commit();
+         }
+         await setDoc(doc(db,'managerData','catalog','config','categories'),{items:syncCategories,updatedAt:new Date().toISOString()});
+         await setDoc(doc(db,'managerData','catalog','config','brands'),{items:syncBrands,updatedAt:new Date().toISOString()});
+         const publicProducts=syncProducts.filter(p=>automaticStatus(p)==='Published').map(p=>({id:p.id,name:p.name,brand:p.brand||'',category:p.category||'',subcategory:p.subcategory||'',mrp:Number(p.mrp||0),sale:Number(p.sale||0),size:p.size||'',image:p.image||'',variants:(p.variants||[]).map(v=>({label:v.label||'',mrp:Number(v.mrp||0),sale:Number(v.sale||0),image:v.image||''})),clearingOut:!!p.clearingOut,outOfStock:!!p.outOfStock,status:'Published'}));
+         const publicSnap=await getDocs(collection(db,'publicCatalog','items','products'));
+         const publicIds=new Set(publicProducts.map(p=>String(p.id)));
+         for(let i=0;i<publicProducts.length;i+=400){
+           const batch=writeBatch(db);
+           publicProducts.slice(i,i+400).forEach(p=>batch.set(doc(db,'publicCatalog','items','products',String(p.id)),p));
+           await batch.commit();
+         }
+         const stale=publicSnap.docs.filter(d=>!publicIds.has(d.id));
+         for(let i=0;i<stale.length;i+=400){
+           const batch=writeBatch(db);
+           stale.slice(i,i+400).forEach(d=>batch.delete(d.ref));
+           await batch.commit();
+         }
+         if(!cancelled){
+           const eligibleCount=publicProducts.length;
+           setCloudSyncStatus(eligibleCount===0?'Synced · 0 public products — check Published status and required fields':'Synced · '+eligibleCount+' public products · '+new Date().toLocaleTimeString());
+           setCloudSyncError('');
+         }
+       }catch(err){
+         if(!cancelled){setCloudSyncStatus('Sync error');setCloudSyncError(err?.message||'Cloud sync failed');}
+       }
+     });
+   };
    enqueueSync();
    return()=>{cancelled=true};
  },[authUser,cloudReady,cloudMigrationRequired,products,categories,brands]);
-
  const handleLogin=async e=>{e.preventDefault();setLoginBusy(true);setLoginError('');try{await signInWithEmailAndPassword(auth,loginEmail.trim(),loginPassword)}catch(err){setLoginError(err?.message||'Login failed. Check your email and password.')}finally{setLoginBusy(false)}};
  const handleLogout=()=>signOut(auth);
  
