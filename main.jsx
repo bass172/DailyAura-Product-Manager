@@ -132,7 +132,7 @@ function App(){
      const publicIds=new Set(publicProducts.map(p=>String(p.id)));
      for(let i=0;i<publicProducts.length;i+=400){const batch=writeBatch(db);publicProducts.slice(i,i+400).forEach(p=>batch.set(doc(db,'publicCatalog','items','products',String(p.id)),p));await batch.commit();}
      const stale=publicSnap.docs.filter(d=>!publicIds.has(d.id));for(let i=0;i<stale.length;i+=400){const batch=writeBatch(db);stale.slice(i,i+400).forEach(d=>batch.delete(d.ref));await batch.commit();}
-     if(!cancelled){setCloudSyncStatus('Synced · '+new Date().toLocaleTimeString());setCloudSyncError('');}
+     if(!cancelled){const eligibleCount=publicProducts.length;setCloudSyncStatus(eligibleCount===0?'Synced · 0 public products — check Published status and required fields':'Synced · '+eligibleCount+' public products · '+new Date().toLocaleTimeString());setCloudSyncError('');}
    }catch(err){if(!cancelled){setCloudSyncStatus('Sync error');setCloudSyncError(err?.message||'Cloud sync failed');}}})();
    return()=>{cancelled=true};
  },[authUser,cloudReady,cloudMigrationRequired,products,categories,brands]);
